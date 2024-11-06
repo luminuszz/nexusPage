@@ -27,7 +27,7 @@ type FormSchema = z.infer<typeof schema>;
 export default function Home() {
   const {
     handleSubmit,
-    formState: { isSubmitting, isValid, errors },
+    formState: { isSubmitting, errors },
     setValue,
     watch,
     register,
@@ -39,10 +39,7 @@ export default function Home() {
       urlsList: [],
       kindleEmail: "",
     },
-  });
-
-  console.log({
-    errors,
+    mode: "onChange",
   });
 
   const urlList = watch("urlsList");
@@ -97,9 +94,8 @@ export default function Home() {
   const canDisableButton = !!isSubmitting;
 
   console.log({
-    urlList,
-    currentUrl,
-    isValid,
+    errors,
+    t: errors.kindleEmail?.message,
   });
 
   return (
@@ -116,14 +112,16 @@ export default function Home() {
             className="space-y-4"
             onSubmit={handleSubmit(handleSendToScrapping)}
           >
-            <div className="justify-center-center flex flex-col gap-2">
+            <div className="flex flex-col justify-center gap-2">
               <Label htmlFor="kindleEmail">Kindle E-mail</Label>
               <Input
                 className="w-[400px]"
                 placeholder="Email do Kindle"
-                type="email"
                 {...register("kindleEmail")}
               />
+              {!!errors.kindleEmail?.message && (
+                <p className="text-red-500">{errors.kindleEmail.message}</p>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -132,6 +130,9 @@ export default function Home() {
                 placeholder="Adicione uma url ex:https://example.com"
                 {...register("currentUrl")}
               />
+              {errors.currentUrl && (
+                <p className="text-red-500">{errors.currentUrl.message}</p>
+              )}
 
               <Button
                 size="icon"
