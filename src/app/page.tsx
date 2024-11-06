@@ -7,29 +7,51 @@ import { Input } from "@/components/ui/input";
 import { UrlCard } from "@/components/url-card";
 import { Label } from "@radix-ui/react-label";
 import { FileCode, Globe, Plus } from "lucide-react";
-import { FormEvent, useRef, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { sendUrlsToScrapping } from "./actions/send-urls-to-scrapping";
 
-interface UrlItem {
-  id: string;
-  url: string;
-}
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 
-const validUrl = z.string().url();
+const validUrl = z.string().url().trim();
+
+const schema = z.object({
+  currentUrl: validUrl.nullable(),
+  urlsList: z.array(validUrl).min(1),
+  kindleEmail: z.string().email(),
+});
+
+type FormSchema = z.infer<typeof schema>;
 
 export default function Home() {
-  const [urls, setUrls] = useState<UrlItem[]>([]);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const {
+    handleSubmit,
+    formState: { isSubmitting, isValid },
+    setValue,
+    watch,
+    register,
+  } = useForm<FormSchema>({
+    resolver: zodResolver(schema),
+    values: {
+      currentUrl: null,
+      urlsList: [],
+      kindleEmail: "",
+    },
+  });
 
-  function handleRemoveUrl(id: string) {
-    setUrls((prev) => prev.filter((item) => item.id !== id));
+  const urlList = watch("urlsList");
+  const currentUrl = watch("currentUrl");
+
+  function handleRemoveUrl(currentUrl: string) {
+    setValue(
+      "urlsList",
+      urlList.filter((url) => url !== currentUrl),
+    );
   }
 
   function handleAddUrl() {
-    const results = validUrl.safeParse(inputRef.current?.value);
+    const results = validUrl.safeParse(currentUrl);
 
     if (results.error) {
       toast.error("Url inválida", {
@@ -38,7 +60,7 @@ export default function Home() {
       return;
     }
 
-    const isDuplicate = urls.some((urlObj) => urlObj.url === results.data);
+    const isDuplicate = urlList.some((url) => url === results.data);
 
     if (isDuplicate) {
       toast.error("URL duplicada", {
@@ -48,30 +70,22 @@ export default function Home() {
       return;
     }
 
-    setUrls((prev) => [
-      ...prev,
-      {
-        id: Math.random().toString(36).substring(7),
-        url: results.data,
-      },
-    ]);
+    setValue("urlsList", [...urlList, results.data]);
   }
 
-  async function handleSubmit(e: FormEvent) {
-    setIsLoading(true);
-
+  async function handleSendToScrapping({ kindleEmail, urlsList }: FormSchema) {
     try {
       await sendUrlsToScrapping({
-        urls: urls.map((item) => item.url),
+        urls: urlsList,
+        kindleEmail,
       });
+      toast.success("Urls enviadas com sucesso");
     } catch {
       toast.error("Erro ao enviar urls");
-    } finally {
-      setIsLoading(false);
     }
   }
 
-  const canDisableButton = urls.length === 0 || isLoading;
+  const canDisableButton = !isValid || isSubmitting;
 
   return (
     <Container>
@@ -83,14 +97,28 @@ export default function Home() {
             from Okami
           </h1>
 
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            <div className="flex items-center gap-2">
-              <Label htmlFor="urlInput">Url</Label>
+          <form
+            className="space-y-4"
+            onSubmit={handleSubmit(handleSendToScrapping)}
+          >
+            <div className="justify-center-center flex flex-col gap-2">
+              <Label htmlFor="kindleEmail">Kindle E-mail</Label>
               <Input
+                {...register("kindleEmail")}
+                id="kindleEmail"
+                className="w-[400px]"
+                placeholder="Email do Kindle"
+                type="email"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Input
+                {...register("currentUrl")}
+                type="url"
                 id="urlInput"
-                ref={inputRef}
                 className="w-[600px]"
-                placeholder="https://example.com"
+                placeholder="Adicione uma url ex:https://example.com"
               />
 
               <Button
@@ -108,16 +136,16 @@ export default function Home() {
               Urls adicionadas
             </h2>
 
-            {urls.length === 0 && (
+            {urlList.length === 0 && (
               <p className="text-muted-foreground">Nenhuma url adicionada</p>
             )}
 
             <aside className="grid max-w-[600px] grid-cols-2 gap-4">
-              {urls.map((item) => (
+              {urlList.map((url) => (
                 <UrlCard
                   removeUrl={handleRemoveUrl}
-                  key={item.id}
-                  url={{ id: item.id, submittedUrl: item.url }}
+                  key={url}
+                  url={{ submittedUrl: url }}
                 />
               ))}
             </aside>
