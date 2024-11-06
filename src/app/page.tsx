@@ -6,18 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UrlCard } from "@/components/url-card";
 import { Label } from "@radix-ui/react-label";
-import { FileCode, Globe, Plus } from "lucide-react";
+import { FileCode, Globe, LoaderCircle, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { sendUrlsToScrapping } from "./actions/send-urls-to-scrapping";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { sendUrlsToScrapping } from "./actions/send-urls-to-scrapping";
 
 const validUrl = z.string().url().trim();
 
 const schema = z.object({
-  currentUrl: validUrl.nullable(),
+  currentUrl: z.string().optional(),
   urlsList: z.array(validUrl).min(1),
   kindleEmail: z.string().email(),
 });
@@ -27,17 +27,22 @@ type FormSchema = z.infer<typeof schema>;
 export default function Home() {
   const {
     handleSubmit,
-    formState: { isSubmitting, isValid },
+    formState: { isSubmitting, isValid, errors },
     setValue,
     watch,
     register,
+    reset,
   } = useForm<FormSchema>({
     resolver: zodResolver(schema),
     values: {
-      currentUrl: null,
+      currentUrl: "",
       urlsList: [],
       kindleEmail: "",
     },
+  });
+
+  console.log({
+    errors,
   });
 
   const urlList = watch("urlsList");
@@ -71,6 +76,7 @@ export default function Home() {
     }
 
     setValue("urlsList", [...urlList, results.data]);
+    setValue("currentUrl", "");
   }
 
   async function handleSendToScrapping({ kindleEmail, urlsList }: FormSchema) {
@@ -79,13 +85,22 @@ export default function Home() {
         urls: urlsList,
         kindleEmail,
       });
+
+      reset();
       toast.success("Urls enviadas com sucesso");
-    } catch {
+    } catch (e) {
+      console.log(e);
       toast.error("Erro ao enviar urls");
     }
   }
 
-  const canDisableButton = !isValid || isSubmitting;
+  const canDisableButton = !!isSubmitting;
+
+  console.log({
+    urlList,
+    currentUrl,
+    isValid,
+  });
 
   return (
     <Container>
@@ -104,21 +119,18 @@ export default function Home() {
             <div className="justify-center-center flex flex-col gap-2">
               <Label htmlFor="kindleEmail">Kindle E-mail</Label>
               <Input
-                {...register("kindleEmail")}
-                id="kindleEmail"
                 className="w-[400px]"
                 placeholder="Email do Kindle"
                 type="email"
+                {...register("kindleEmail")}
               />
             </div>
 
             <div className="flex items-center gap-2">
               <Input
-                {...register("currentUrl")}
-                type="url"
-                id="urlInput"
                 className="w-[600px]"
                 placeholder="Adicione uma url ex:https://example.com"
+                {...register("currentUrl")}
               />
 
               <Button
@@ -155,8 +167,14 @@ export default function Home() {
               type="submit"
               disabled={canDisableButton}
             >
-              <FileCode className="size-4" />
-              Enviar
+              {isSubmitting ? (
+                <LoaderCircle className="size-5 animate-spin" />
+              ) : (
+                <>
+                  <FileCode className="size-4" />
+                  Enviar
+                </>
+              )}
             </Button>
           </form>
         </section>
