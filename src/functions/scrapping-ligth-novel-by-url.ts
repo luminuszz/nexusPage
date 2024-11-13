@@ -19,7 +19,8 @@ const getPath = (filename: string) => path.resolve(env.TEMP_FILE_DIR, filename);
 export async function scrapingLightNovelByUrl({
   urls,
 }: Input): Promise<FilePaths> {
-  const filesPaths: Array<{ filename: string; filePath: string }> = [];
+  const filesPaths: Array<{ filename: string; filePath: string; url: string }> =
+    [];
 
   const browser = await puppeteer.launch({
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
@@ -62,7 +63,7 @@ export async function scrapingLightNovelByUrl({
 
     await writeFile(filePath, pdfStream);
 
-    filesPaths.push({ filename: fileName, filePath });
+    filesPaths.push({ filename: fileName, filePath, url });
   }
 
   await browser.close();

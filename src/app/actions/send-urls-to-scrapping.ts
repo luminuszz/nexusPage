@@ -1,5 +1,7 @@
 "use server";
 
+import { db } from "@/db/db";
+import { extractions, fileExtractions } from "@/db/schema";
 import { deleteTempFiles } from "@/functions/delete-temp-files";
 import { FilesData } from "@/functions/dto";
 import { scrapingLightNovelByUrl } from "@/functions/scrapping-ligth-novel-by-url";
@@ -25,9 +27,24 @@ export async function sendUrlsToScrapping(data: SendUrlToTransformSchemaType) {
   try {
     const { urls, kindleEmail } = sendUrlsToScrappingSchema.parse(data);
 
+    const [{ extractionId }] = await db
+      .insert(extractions)
+      .values({
+        kindleEmail,
+      })
+      .returning({ extractionId: extractions.id });
+
     console.log("Buscando os arquivos nos links: ", JSON.stringify(urls));
 
     const { filesPaths } = await scrapingLightNovelByUrl({ urls });
+
+    await db.insert(fileExtractions).values(
+      filesPaths.map((item) => ({
+        extractionId,
+        filename: item.filename,
+        urlScrapping: item.url,
+      })),
+    );
 
     filesHistory.push(...filesPaths);
 
@@ -41,6 +58,7 @@ export async function sendUrlsToScrapping(data: SendUrlToTransformSchemaType) {
 
     return {
       success: true,
+      extractionId,
     };
   } catch (e) {
     console.error(e);

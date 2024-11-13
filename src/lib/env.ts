@@ -4,6 +4,7 @@ export const envSchema = z.object({
   RESEND_API_KEY: z.string(),
   TEMP_FILE_DIR: z.string(),
   RESENT_FROM_EMAIL: z.string(),
+  DATABASE_URL: z.string(),
 });
 
 export type EnvType = z.infer<typeof envSchema>;

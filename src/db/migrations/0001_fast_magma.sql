@@ -1,0 +1,1 @@
+ALTER TABLE "extractions" RENAME COLUMN "kindlerEmail" TO "kindleEmail";

@@ -4,6 +4,7 @@ import { sendUrlsToScrapping } from "@/app/actions/send-urls-to-scrapping";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Label } from "@radix-ui/react-label";
 import { FileCode, Globe, LoaderCircle, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -22,6 +23,8 @@ const schema = z.object({
 type FormSchema = z.infer<typeof schema>;
 
 export function Form() {
+  const router = useRouter();
+
   const {
     handleSubmit,
     formState: { isSubmitting, errors },
@@ -74,17 +77,25 @@ export function Form() {
   }
 
   async function handleSendToScrapping({ kindleEmail, urlsList }: FormSchema) {
-    try {
-      await sendUrlsToScrapping({
-        urls: urlsList,
-        kindleEmail,
+    const response = await sendUrlsToScrapping({
+      urls: urlsList,
+      kindleEmail,
+    });
+
+    if (response.success) {
+      const { extractionId } = response;
+
+      toast.success("Urls enviadas com sucesso", {
+        description: `Extraction ID: ${extractionId}`,
       });
 
       reset();
-      toast.success("Urls enviadas com sucesso");
-    } catch (e) {
-      console.log(e);
-      toast.error("Erro ao enviar urls");
+
+      router.push(`/extraction/${extractionId}`);
+    } else {
+      toast.error("Erro ao enviar urls", {
+        description: String(response.message),
+      });
     }
   }
 
