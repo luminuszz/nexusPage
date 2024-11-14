@@ -76,7 +76,7 @@ export function RealtimeExtraction({ extractionId }: Props) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[600px]">
+          <ScrollArea className="h-[300px]">
             {events.map((event, index) => (
               <EventIndicator
                 key={event.id}
