@@ -1,6 +1,6 @@
 {
-  "id": "d9efe480-c599-4216-8bf5-cec5b1f48908",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "222b3d37-5246-462e-89fb-81a8a9fa07f6",
+  "prevId": "626e271e-740c-432a-b6b6-a2549bd0d7cb",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -56,6 +56,13 @@
           "primaryKey": false,
           "notNull": true
         },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
         "extractionId": {
           "name": "extractionId",
           "type": "uuid",
@@ -110,7 +117,21 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "file_extractions_extractionId_extractions_id_fk": {
+          "name": "file_extractions_extractionId_extractions_id_fk",
+          "tableFrom": "file_extractions",
+          "tableTo": "extractions",
+          "columnsFrom": [
+            "extractionId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},

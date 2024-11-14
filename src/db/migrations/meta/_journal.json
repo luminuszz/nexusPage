@@ -5,15 +5,22 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1731523082469,
-      "tag": "0000_groovy_triton",
+      "when": 1731603864775,
+      "tag": "0000_conscious_jean_grey",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1731526215110,
-      "tag": "0001_fast_magma",
+      "when": 1731604358303,
+      "tag": "0001_rapid_black_cat",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1731604390614,
+      "tag": "0002_lazy_peter_parker",
       "breakpoints": true
     }
   ]

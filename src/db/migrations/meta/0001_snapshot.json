@@ -1,6 +1,6 @@
 {
-  "id": "9b11319d-fdd5-47be-b599-324f9e9199a6",
-  "prevId": "7a4f996a-f965-4898-8bc8-55eb0f0333be",
+  "id": "626e271e-740c-432a-b6b6-a2549bd0d7cb",
+  "prevId": "d9efe480-c599-4216-8bf5-cec5b1f48908",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -20,10 +20,72 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
         }
       },
       "indexes": {},
       "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.file_extraction_event_log": {
+      "name": "file_extraction_event_log",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "status": {
+          "name": "status",
+          "type": "status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "extractionId": {
+          "name": "extractionId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "file_extraction_event_log_extractionId_extractions_id_fk": {
+          "name": "file_extraction_event_log_extractionId_extractions_id_fk",
+          "tableFrom": "file_extraction_event_log",
+          "tableTo": "extractions",
+          "columnsFrom": [
+            "extractionId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -40,12 +102,6 @@
           "primaryKey": true,
           "notNull": true,
           "default": "gen_random_uuid()"
-        },
-        "filename": {
-          "name": "filename",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
         },
         "urlScrapping": {
           "name": "urlScrapping",
@@ -69,7 +125,19 @@
       "isRLSEnabled": false
     }
   },
-  "enums": {},
+  "enums": {
+    "public.status": {
+      "name": "status",
+      "schema": "public",
+      "values": [
+        "extracting_pdf_files",
+        "sending_email",
+        "pending",
+        "success",
+        "error"
+      ]
+    }
+  },
   "schemas": {},
   "sequences": {},
   "roles": {},

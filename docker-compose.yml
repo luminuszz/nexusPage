@@ -27,10 +27,9 @@ services:
       - RESENT_FROM_EMAIL=${RESENT_FROM_EMAIL}
     volumes:
       - .:/app
-      - node_modules:/app/node_modules
+      - ./node_modules:/app/node_modules
     depends_on:
       - database
 
 volumes:
   pgdata:
-  node_modules:

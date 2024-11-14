@@ -1,72 +1,84 @@
 "use server";
 
 import { db } from "@/db/db";
-import { extractions, fileExtractions } from "@/db/schema";
+import {
+  extractions,
+  ExtractionStatus,
+  fileExtractionEventLog,
+} from "@/db/schema";
 import { deleteTempFiles } from "@/functions/delete-temp-files";
 import { FilesData } from "@/functions/dto";
 import { scrapingLightNovelByUrl } from "@/functions/scrapping-ligth-novel-by-url";
 import { sendEmailWithPdfs } from "@/functions/send-email-with.pdfs";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 const sendUrlsToScrappingSchema = z.object({
-  urls: z
-    .array(z.string().url())
-    .min(1)
-    .refine((urls) => new Set(urls).size === urls.length, {
-      message: "URLs must be unique",
-    }),
-
-  kindleEmail: z.string().email(),
+  extractionId: z.string().uuid(),
 });
+
+const updateExtractionStatus = async (
+  extractionId: string,
+  status: ExtractionStatus,
+) => {
+  await db.insert(fileExtractionEventLog).values({ status, extractionId });
+
+  if (["error", "success"].includes(status)) {
+    await db
+      .update(extractions)
+      .set({ status })
+      .where(eq(extractions.id, extractionId));
+  }
+};
 
 type SendUrlToTransformSchemaType = z.infer<typeof sendUrlsToScrappingSchema>;
 
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export async function sendUrlsToScrapping(data: SendUrlToTransformSchemaType) {
   const filesHistory: FilesData = [];
+  const { extractionId } = sendUrlsToScrappingSchema.parse(data);
 
   try {
-    const { urls, kindleEmail } = sendUrlsToScrappingSchema.parse(data);
+    const extraction = await db.query.extractions.findFirst({
+      where: (ext, { eq }) => eq(ext.id, extractionId),
+      with: {
+        files: {
+          columns: {
+            urlScrapping: true,
+          },
+        },
+      },
+    });
 
-    const [{ extractionId }] = await db
-      .insert(extractions)
-      .values({
-        kindleEmail,
-      })
-      .returning({ extractionId: extractions.id });
+    if (!extraction || extraction.status !== "pending") {
+      throw new Error("Extraction not found");
+    }
 
-    console.log("Buscando os arquivos nos links: ", JSON.stringify(urls));
+    await updateExtractionStatus(extractionId, "extracting_pdf_files");
+
+    await delay(2000);
+
+    const urls = extraction.files.map((file) => file.urlScrapping);
 
     const { filesPaths } = await scrapingLightNovelByUrl({ urls });
 
-    await db.insert(fileExtractions).values(
-      filesPaths.map((item) => ({
-        extractionId,
-        filename: item.filename,
-        urlScrapping: item.url,
-      })),
-    );
-
     filesHistory.push(...filesPaths);
 
-    console.log("Arquivos encontrados: ", JSON.stringify(filesPaths));
+    await updateExtractionStatus(extractionId, "sending_email");
 
-    console.log("Enviando os arquivos por email");
+    await delay(2000);
 
-    await sendEmailWithPdfs({ filesPaths, kindleEmail });
+    await sendEmailWithPdfs({
+      filesPaths,
+      kindleEmail: extraction.kindleEmail,
+    });
 
-    console.log("sucesso");
-
-    return {
-      success: true,
-      extractionId,
-    };
-  } catch (e) {
-    console.error(e);
-
-    return {
-      success: false,
-      message: e,
-    };
+    await updateExtractionStatus(extractionId, "success");
+  } catch {
+    await updateExtractionStatus(extractionId, "error");
   } finally {
     console.log("Deletando arquivos temporários");
     await deleteTempFiles({ filesPaths: filesHistory });

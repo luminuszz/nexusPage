@@ -1,0 +1,1 @@
+ALTER TABLE "file_extraction_event_log" ADD COLUMN "created_at" timestamp DEFAULT now() NOT NULL;

@@ -1,6 +1,6 @@
 "use client";
 
-import { sendUrlsToScrapping } from "@/app/actions/send-urls-to-scrapping";
+import { createExtractionIntent } from "@/app/actions/create-extraction-intent";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Label } from "@radix-ui/react-label";
 import { FileCode, Globe, LoaderCircle, Plus } from "lucide-react";
@@ -31,7 +31,6 @@ export function Form() {
     setValue,
     watch,
     register,
-    reset,
   } = useForm<FormSchema>({
     resolver: zodResolver(schema),
     values: {
@@ -77,24 +76,22 @@ export function Form() {
   }
 
   async function handleSendToScrapping({ kindleEmail, urlsList }: FormSchema) {
-    const response = await sendUrlsToScrapping({
-      urls: urlsList,
-      kindleEmail,
-    });
-
-    if (response.success) {
-      const { extractionId } = response;
-
-      toast.success("Urls enviadas com sucesso", {
-        description: `Extraction ID: ${extractionId}`,
+    try {
+      const results = await createExtractionIntent({
+        urls: urlsList,
+        kindleEmail,
       });
 
-      reset();
+      toast.success("Urls enviadas", {
+        description: "Urls enviadas com sucesso para extração",
+      });
 
-      router.push(`/extraction/${extractionId}`);
-    } else {
+      if (results?.extractionId) {
+        router.replace(`/extraction/${results.extractionId}`);
+      }
+    } catch {
       toast.error("Erro ao enviar urls", {
-        description: String(response.message),
+        description: "Ocorreu um erro ao enviar as urls para extração",
       });
     }
   }
