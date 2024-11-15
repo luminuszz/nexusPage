@@ -23,7 +23,7 @@ services:
       - NODE_ENV=development
       - DATABASE_URL=postgres://postgres:postgres@database:5432/nextapp
       - RESEND_API_KEY=${RESEND_API_KEY}
-      - TEMP_FILE_DIR=${TEMP_FILE_DIR}
+      - TEMP_FILE_DIR=/app/temp
       - RESENT_FROM_EMAIL=${RESENT_FROM_EMAIL}
     volumes:
       - .:/app

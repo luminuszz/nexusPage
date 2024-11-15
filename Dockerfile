@@ -28,6 +28,10 @@ RUN apt-get update -qq && \
 
 RUN pnpm install --frozen-lockfile --prod=false
 
+# Create temp folder
+RUN mkdir -p /app/temp
+
+
 ENV PUPPETEER_EXECUTABLE_PATH="/usr/bin/chromium"
 
 COPY . .
