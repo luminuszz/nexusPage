@@ -1,5 +1,5 @@
+import { ExtractionRequestForm } from "@/app/components/extraction-request-form";
 import { Container } from "@/components/container";
-import { Form } from "@/components/form";
 import { Logo } from "@/components/logo";
 
 export default function Home() {
@@ -10,10 +10,10 @@ export default function Home() {
           <Logo width="150px" height="150px" />
           <h1 className="text-4xl font-bold text-foreground">NexusPage</h1>
           <h1 className="text2xl font-bold text-muted-foreground">
-            from Okami
+            From Okami
           </h1>
 
-          <Form />
+          <ExtractionRequestForm />
         </section>
       </div>
     </Container>

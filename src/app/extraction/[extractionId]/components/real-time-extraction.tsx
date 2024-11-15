@@ -24,7 +24,6 @@ export interface Props {
 
 export function RealtimeExtraction({ extractionId }: Props) {
   const [events, setEvents] = useState<ExtractionParsed[]>([]);
-
   const [iStopped, setIsStopped] = useState(false);
 
   useEffect(() => {
@@ -58,7 +57,7 @@ export function RealtimeExtraction({ extractionId }: Props) {
 
     fetchEvents();
 
-    intervalId = setInterval(fetchEvents, 2000);
+    intervalId = setInterval(fetchEvents, 3000);
 
     return () => clearInterval(intervalId);
   }, [extractionId]);

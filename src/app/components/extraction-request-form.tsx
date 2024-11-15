@@ -1,6 +1,9 @@
 "use client";
 
 import { createExtractionIntent } from "@/app/actions/create-extraction-intent";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { UrlCard } from "@/components/url-card";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Label } from "@radix-ui/react-label";
 import { FileCode, Globe, LoaderCircle, Plus } from "lucide-react";
@@ -8,9 +11,6 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { UrlCard } from "./url-card";
 
 const validUrl = z.string().url().trim();
 
@@ -22,7 +22,7 @@ const schema = z.object({
 
 type FormSchema = z.infer<typeof schema>;
 
-export function Form() {
+export function ExtractionRequestForm() {
   const router = useRouter();
 
   const {
